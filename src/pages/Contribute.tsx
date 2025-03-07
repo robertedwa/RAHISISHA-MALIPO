@@ -45,14 +45,26 @@ const Contribute = () => {
       <div className="container mx-auto px-4 pt-20 pb-10">
         <div className="max-w-5xl mx-auto">
           <div className="animate-slide-up">
-            <header className="mb-8 mt-8">
-              <h1 className="text-3xl font-bold">Make a Contribution</h1>
+            <header className="mb-6 mt-6 sm:mt-8 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold">Make a Contribution</h1>
               <p className="text-muted-foreground">
-                Add funds to your account via M-Pesa
+                Add funds to your account via Mobile Money
               </p>
             </header>
 
+            {/* Mobile-first layout: Payment simulator on top for small screens */}
             <div className="grid gap-6 md:grid-cols-2">
+              <div className="order-1 md:order-2">
+                <PaymentSimulator onSuccess={handlePaymentSuccess} />
+                
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                  <h3 className="font-medium text-blue-700">Your Current Balance</h3>
+                  <p className="text-2xl font-bold text-blue-700 mt-1">
+                    {formatCurrency(user.balance)}
+                  </p>
+                </div>
+              </div>
+              
               <div className="order-2 md:order-1">
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold mb-4">Recent Contributions</h2>
@@ -77,6 +89,15 @@ const Contribute = () => {
                               <p className="text-xs text-muted-foreground">
                                 {new Date(payment.date).toLocaleString("en-TZ")}
                               </p>
+                              {payment.network && (
+                                <p className="text-xs text-muted-foreground">
+                                  via {payment.network === "mpesa" ? "M-Pesa" : 
+                                       payment.network === "tigopesa" ? "Tigo Pesa" : 
+                                       payment.network === "airtelmoney" ? "Airtel Money" : 
+                                       payment.network === "halopesa" ? "Halo Pesa" : 
+                                       payment.network === "ezypesa" ? "Ezy Pesa" : "Mobile Money"}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -105,22 +126,12 @@ const Contribute = () => {
                 <div className="p-4 bg-muted/20 rounded-lg border">
                   <h3 className="font-medium mb-2">How It Works</h3>
                   <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                    <li>Select your preferred mobile payment network</li>
                     <li>Enter the amount you wish to contribute</li>
-                    <li>Click the "Pay" button to initiate the M-Pesa payment</li>
-                    <li>In a real application, you would receive an M-Pesa prompt on your phone</li>
+                    <li>Click the "Pay" button to initiate the payment</li>
+                    <li>In a real application, you would receive a mobile money prompt on your phone</li>
                     <li>Once the payment is complete, your balance will be updated</li>
                   </ol>
-                </div>
-              </div>
-              
-              <div className="order-1 md:order-2">
-                <PaymentSimulator onSuccess={handlePaymentSuccess} />
-                
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                  <h3 className="font-medium text-blue-700">Your Current Balance</h3>
-                  <p className="text-2xl font-bold text-blue-700 mt-1">
-                    {formatCurrency(user.balance)}
-                  </p>
                 </div>
               </div>
             </div>

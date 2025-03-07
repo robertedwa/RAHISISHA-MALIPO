@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { CreditCard, Check, X } from "lucide-react";
+import { CreditCard, Check, X, ChevronDown } from "lucide-react";
 import { simulateMPesaPayment } from "@/utils/payments";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/validation";
@@ -8,10 +9,20 @@ interface PaymentSimulatorProps {
   onSuccess?: () => void;
 }
 
+const PAYMENT_NETWORKS = [
+  { id: "mpesa", name: "M-Pesa (Vodacom)", color: "bg-red-500" },
+  { id: "tigopesa", name: "Tigo Pesa", color: "bg-blue-500" },
+  { id: "airtelmoney", name: "Airtel Money", color: "bg-red-600" },
+  { id: "halopesa", name: "Halo Pesa (TTCL)", color: "bg-green-600" },
+  { id: "ezypesa", name: "Ezy Pesa (Zantel)", color: "bg-orange-500" },
+];
+
 const PaymentSimulator = ({ onSuccess }: PaymentSimulatorProps) => {
   const [amount, setAmount] = useState(10000);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [network, setNetwork] = useState(PAYMENT_NETWORKS[0]);
+  const [showNetworks, setShowNetworks] = useState(false);
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -31,12 +42,13 @@ const PaymentSimulator = ({ onSuccess }: PaymentSimulatorProps) => {
     setStatus("idle");
     
     try {
+      // We'll still use the M-Pesa simulation function but pass the network ID for future use
       const result = await simulateMPesaPayment(amount, (success) => {
         setStatus(success ? "success" : "error");
         if (success && onSuccess) {
           onSuccess();
         }
-      });
+      }, network.id);
       
       // Reset form on success
       if (result && result.status === "completed") {
@@ -54,9 +66,9 @@ const PaymentSimulator = ({ onSuccess }: PaymentSimulatorProps) => {
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
       <div className="bg-primary/5 p-4 flex items-center space-x-2 border-b">
         <CreditCard className="h-5 w-5 text-primary" />
-        <h3 className="font-medium">M-Pesa Payment</h3>
+        <h3 className="font-medium">Mobile Money Payment</h3>
       </div>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-muted-foreground mb-1">
@@ -75,6 +87,45 @@ const PaymentSimulator = ({ onSuccess }: PaymentSimulatorProps) => {
             <p className="text-sm text-muted-foreground mt-1">
               Minimum amount: 1,000 TZS
             </p>
+          </div>
+          
+          <div>
+            <label htmlFor="network" className="block text-sm font-medium text-muted-foreground mb-1">
+              Payment Network
+            </label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowNetworks(!showNetworks)}
+                className="input-primary w-full flex items-center justify-between"
+                disabled={processing}
+              >
+                <div className="flex items-center">
+                  <span className={`w-3 h-3 rounded-full mr-2 ${network.color}`}></span>
+                  <span>{network.name}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+              
+              {showNetworks && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-card border rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {PAYMENT_NETWORKS.map((net) => (
+                    <button
+                      key={net.id}
+                      type="button"
+                      className="w-full px-4 py-2 text-left hover:bg-muted flex items-center"
+                      onClick={() => {
+                        setNetwork(net);
+                        setShowNetworks(false);
+                      }}
+                    >
+                      <span className={`w-3 h-3 rounded-full mr-2 ${net.color}`}></span>
+                      {net.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="pt-2">

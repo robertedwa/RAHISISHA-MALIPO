@@ -10,6 +10,7 @@ export interface Payment {
   status: "pending" | "completed" | "failed";
   date: string;
   reference: string;
+  network?: string; // Add network field to track which payment network was used
 }
 
 // Mock payments database
@@ -20,10 +21,11 @@ const generateReference = (): string => {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 };
 
-// Simulate M-Pesa payment
+// Simulate Mobile Money payment (formerly M-Pesa only)
 export const simulateMPesaPayment = async (
   amount: number,
-  callback?: (success: boolean) => void
+  callback?: (success: boolean) => void,
+  network: string = "mpesa"
 ): Promise<Payment | null> => {
   const user = getCurrentUser();
   if (!user) {
@@ -38,6 +40,18 @@ export const simulateMPesaPayment = async (
     return null;
   }
 
+  // Get network display name
+  const getNetworkName = (networkId: string): string => {
+    const networks: Record<string, string> = {
+      mpesa: "M-Pesa",
+      tigopesa: "Tigo Pesa",
+      airtelmoney: "Airtel Money",
+      halopesa: "Halo Pesa",
+      ezypesa: "Ezy Pesa"
+    };
+    return networks[networkId] || "Mobile Money";
+  };
+
   // Create pending payment
   const pendingPayment: Payment = {
     id: Date.now().toString(),
@@ -47,13 +61,14 @@ export const simulateMPesaPayment = async (
     status: "pending",
     date: new Date().toISOString(),
     reference: generateReference(),
+    network
   };
 
   // Add to payments
   payments = [...payments, pendingPayment];
 
   // Simulate payment processing
-  toast.info("Processing M-Pesa payment...");
+  toast.info(`Processing ${getNetworkName(network)} payment...`);
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -70,7 +85,7 @@ export const simulateMPesaPayment = async (
         // Update user balance
         updateUserBalance(user.id, amount);
 
-        toast.success("Payment successful");
+        toast.success(`${getNetworkName(network)} payment successful`);
         callback?.(true);
         resolve(completedPayment);
       } else {
@@ -80,7 +95,7 @@ export const simulateMPesaPayment = async (
           p.id === pendingPayment.id ? failedPayment : p
         );
 
-        toast.error("Payment failed. Please try again.");
+        toast.error(`${getNetworkName(network)} payment failed. Please try again.`);
         callback?.(false);
         resolve(failedPayment);
       }

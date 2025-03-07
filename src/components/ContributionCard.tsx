@@ -53,6 +53,20 @@ const ContributionCard = ({ payment }: ContributionCardProps) => {
     }
   };
 
+  // Get network display name
+  const getNetworkName = (networkId?: string): string => {
+    if (!networkId) return "Mobile Money";
+    
+    const networks: Record<string, string> = {
+      mpesa: "M-Pesa",
+      tigopesa: "Tigo Pesa",
+      airtelmoney: "Airtel Money",
+      halopesa: "Halo Pesa",
+      ezypesa: "Ezy Pesa"
+    };
+    return networks[networkId] || "Mobile Money";
+  };
+
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden animate-scale-in hover:shadow-md transition-shadow">
       <div className="p-4 space-y-2">
@@ -73,6 +87,9 @@ const ContributionCard = ({ payment }: ContributionCardProps) => {
         </div>
         <div className="pt-2 border-t">
           <p className="text-xs text-muted-foreground">
+            Network: {getNetworkName(payment.network)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
             Reference: {payment.reference}
           </p>
         </div>
