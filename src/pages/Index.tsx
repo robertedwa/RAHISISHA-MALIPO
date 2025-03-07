@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Phone, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import PhoneInput from "@/components/PhoneInput";
 import { loginUser } from "@/utils/auth";
 
@@ -32,33 +32,9 @@ const Index = ({ setIsAuthenticated }: IndexProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left side - Hero */}
+        {/* Left side - Empty now */}
         <div className="flex-1 bg-primary/5 flex items-center justify-center p-8 md:p-16">
-          <div className="max-w-md space-y-6 animate-fade-in">
-            <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Simpler payments for Tanzania
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Make contributions, track payments, and manage your finances with ease.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border shadow-sm">
-                <h3 className="font-medium">Secure M-Pesa Integration</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Fast and reliable payments using Tanzania's leading mobile money provider.
-                </p>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border shadow-sm">
-                <h3 className="font-medium">Real-time Reporting</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Track your contributions and view your payment history anytime.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* All description content removed */}
         </div>
 
         {/* Right side - Login form */}
