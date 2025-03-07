@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { isValidTanzanianPhone } from "./validation";
 
 export interface User {

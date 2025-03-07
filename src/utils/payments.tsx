@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { updateUserBalance, getCurrentUser, User } from "./auth";
 
 export interface Payment {
@@ -62,7 +62,7 @@ export const simulateMPesaPayment = async (
 
       if (success) {
         // Update payment status
-        const completedPayment = { ...pendingPayment, status: "completed" };
+        const completedPayment: Payment = { ...pendingPayment, status: "completed" };
         payments = payments.map((p) =>
           p.id === pendingPayment.id ? completedPayment : p
         );
@@ -75,7 +75,7 @@ export const simulateMPesaPayment = async (
         resolve(completedPayment);
       } else {
         // Update payment status
-        const failedPayment = { ...pendingPayment, status: "failed" };
+        const failedPayment: Payment = { ...pendingPayment, status: "failed" };
         payments = payments.map((p) =>
           p.id === pendingPayment.id ? failedPayment : p
         );
