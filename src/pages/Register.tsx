@@ -1,16 +1,17 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Phone, ArrowRight } from "lucide-react";
+import { User, ArrowRight } from "lucide-react";
 import PhoneInput from "@/components/PhoneInput";
-import { loginUser } from "@/utils/auth";
+import { registerUser } from "@/utils/auth";
 
-interface IndexProps {
+interface RegisterProps {
   setIsAuthenticated: (value: boolean) => void;
 }
 
-const Index = ({ setIsAuthenticated }: IndexProps) => {
+const Register = ({ setIsAuthenticated }: RegisterProps) => {
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -19,7 +20,7 @@ const Index = ({ setIsAuthenticated }: IndexProps) => {
     setLoading(true);
 
     try {
-      const user = loginUser(phone);
+      const user = registerUser(phone, name);
       if (user) {
         setIsAuthenticated(true);
         navigate("/dashboard");
@@ -31,47 +32,59 @@ const Index = ({ setIsAuthenticated }: IndexProps) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex-1 flex flex-col md:flex-row">
+      <div className="flex-1 flex flex-col md:flex-row-reverse">
         {/* Left side - Hero */}
         <div className="flex-1 bg-primary/5 flex items-center justify-center p-8 md:p-16">
           <div className="max-w-md space-y-6 animate-fade-in">
             <div className="space-y-2">
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Simpler payments for Tanzania
+                Join TanzaPay today
               </h1>
               <p className="text-lg text-muted-foreground">
-                Make contributions, track payments, and manage your finances with ease.
+                Create your account to start making contributions and managing your payments.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border shadow-sm">
-                <h3 className="font-medium">Secure M-Pesa Integration</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Fast and reliable payments using Tanzania's leading mobile money provider.
-                </p>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border shadow-sm">
-                <h3 className="font-medium">Real-time Reporting</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Track your contributions and view your payment history anytime.
-                </p>
+                <h3 className="font-medium">Getting Started</h3>
+                <ol className="list-decimal list-inside text-sm text-muted-foreground mt-2 space-y-1">
+                  <li>Register with your Tanzanian phone number</li>
+                  <li>Make your first contribution via M-Pesa</li>
+                  <li>Track your contribution history</li>
+                  <li>View detailed reports of your activity</li>
+                </ol>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right side - Login form */}
+        {/* Right side - Registration form */}
         <div className="flex-1 flex items-center justify-center p-8 md:p-16">
           <div className="w-full max-w-md space-y-6 animate-slide-up">
             <div className="space-y-2 text-center">
-              <h2 className="text-2xl font-bold">Sign In</h2>
+              <h2 className="text-2xl font-bold">Create Account</h2>
               <p className="text-muted-foreground">
-                Enter your phone number to continue
+                Enter your details to register
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="input-primary w-full"
+                  placeholder="Your name"
+                />
+              </div>
+
               <div className="space-y-2">
                 <label htmlFor="phone" className="text-sm font-medium">
                   Phone Number
@@ -94,11 +107,11 @@ const Index = ({ setIsAuthenticated }: IndexProps) => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Signing In...
+                    Creating Account...
                   </span>
                 ) : (
                   <span className="flex items-center justify-center">
-                    Sign In <ArrowRight className="ml-2 h-4 w-4" />
+                    Create Account <ArrowRight className="ml-2 h-4 w-4" />
                   </span>
                 )}
               </button>
@@ -106,12 +119,12 @@ const Index = ({ setIsAuthenticated }: IndexProps) => {
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
+                Already have an account?{" "}
                 <Link
-                  to="/register"
+                  to="/"
                   className="text-primary font-medium hover:underline"
                 >
-                  Register
+                  Sign in
                 </Link>
               </p>
             </div>
@@ -122,4 +135,4 @@ const Index = ({ setIsAuthenticated }: IndexProps) => {
   );
 };
 
-export default Index;
+export default Register;
