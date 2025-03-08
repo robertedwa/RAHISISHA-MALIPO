@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, ArrowRight } from "lucide-react";
 import PhoneInput from "@/components/PhoneInput";
 import { registerUser } from "@/utils/auth";
+import { toast } from "sonner";
 
 interface RegisterProps {
   setIsAuthenticated: (value: boolean) => void;
@@ -15,16 +16,34 @@ const Register = ({ setIsAuthenticated }: RegisterProps) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Validate form fields
+      if (!name.trim()) {
+        toast.error("Please enter your name");
+        setLoading(false);
+        return;
+      }
+
+      if (!phone.trim()) {
+        toast.error("Please enter your phone number");
+        setLoading(false);
+        return;
+      }
+
+      // Attempt to register user
       const user = registerUser(phone, name);
+      
       if (user) {
         setIsAuthenticated(true);
         navigate("/dashboard");
       }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -80,8 +99,9 @@ const Register = ({ setIsAuthenticated }: RegisterProps) => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="input-primary w-full"
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="Your name"
+                  disabled={loading}
                 />
               </div>
 
@@ -94,11 +114,14 @@ const Register = ({ setIsAuthenticated }: RegisterProps) => {
                   onChange={setPhone}
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Format: 255XXXXXXXXX (Tanzanian phone number)
+                </p>
               </div>
 
               <button
                 type="submit"
-                className="btn-primary w-full"
+                className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                 disabled={loading}
               >
                 {loading ? (

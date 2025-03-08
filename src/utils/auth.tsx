@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { isValidTanzanianPhone } from "./validation";
 import { executeQuery, transaction } from "./database";
@@ -19,7 +18,7 @@ export const registerUser = (phone: string, name: string): User | null => {
   }
 
   if (!name || name.trim().length < 2) {
-    toast.error("Please enter a valid name");
+    toast.error("Please enter a valid name (at least 2 characters)");
     return null;
   }
 
@@ -41,14 +40,14 @@ export const registerUser = (phone: string, name: string): User | null => {
     
     // Insert new user with SQL query
     executeQuery(
-      "INSERT INTO users (id, phone, name, created_at) VALUES (?, ?, ?, ?)",
-      [id, phone, name, createdAt]
+      "INSERT INTO users (id, phone, name, created_at, balance) VALUES (?, ?, ?, ?, ?)",
+      [id, phone, name, createdAt, 0]
     );
     
     // Retrieve the user to confirm it was saved
     const newUserArray = executeQuery(
-      "SELECT * FROM users WHERE phone = ?", 
-      [phone]
+      "SELECT * FROM users WHERE id = ?", 
+      [id]
     );
     
     if (newUserArray.length === 0) {
@@ -74,7 +73,7 @@ export const registerUser = (phone: string, name: string): User | null => {
     return newUser;
   } catch (error) {
     console.error("Registration error:", error);
-    toast.error("Registration failed");
+    toast.error("Registration failed: " + (error instanceof Error ? error.message : "Unknown error"));
     return null;
   }
 };
