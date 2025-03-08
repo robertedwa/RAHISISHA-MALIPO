@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { isValidTanzanianPhone } from "./validation";
+import { executeQuery, transaction } from "./database";
 
 export interface User {
   id: string;
@@ -9,17 +10,6 @@ export interface User {
   createdAt: string;
   balance: number;
 }
-
-// Mock database for demo
-let users: User[] = [
-  {
-    id: "1",
-    phone: "255123456789",
-    name: "Demo User",
-    createdAt: new Date().toISOString(),
-    balance: 50000,
-  },
-];
 
 // Register a new user
 export const registerUser = (phone: string, name: string): User | null => {
@@ -33,30 +23,60 @@ export const registerUser = (phone: string, name: string): User | null => {
     return null;
   }
 
-  // Check if user already exists
-  const existingUser = users.find((user) => user.phone === phone);
-  if (existingUser) {
-    toast.error("Phone number already registered");
+  try {
+    // Check if user already exists using SQL query
+    const existingUsers = executeQuery(
+      "SELECT * FROM users WHERE phone = ?", 
+      [phone]
+    );
+    
+    if (existingUsers.length > 0) {
+      toast.error("Phone number already registered");
+      return null;
+    }
+
+    // Generate a new ID
+    const id = Date.now().toString();
+    const createdAt = new Date().toISOString();
+    
+    // Insert new user with SQL query
+    executeQuery(
+      "INSERT INTO users (id, phone, name, created_at) VALUES (?, ?, ?, ?)",
+      [id, phone, name, createdAt]
+    );
+    
+    // Retrieve the user to confirm it was saved
+    const newUserArray = executeQuery(
+      "SELECT * FROM users WHERE phone = ?", 
+      [phone]
+    );
+    
+    if (newUserArray.length === 0) {
+      toast.error("Registration failed");
+      return null;
+    }
+    
+    const dbUser = newUserArray[0];
+    
+    // Map database user to application user
+    const newUser: User = {
+      id: dbUser.id,
+      phone: dbUser.phone,
+      name: dbUser.name,
+      createdAt: dbUser.created_at,
+      balance: dbUser.balance || 0,
+    };
+    
+    // Save to localStorage for session management
+    localStorage.setItem("user", JSON.stringify(newUser));
+    
+    toast.success("Registration successful");
+    return newUser;
+  } catch (error) {
+    console.error("Registration error:", error);
+    toast.error("Registration failed");
     return null;
   }
-
-  // Create new user
-  const newUser: User = {
-    id: Date.now().toString(),
-    phone,
-    name,
-    createdAt: new Date().toISOString(),
-    balance: 0,
-  };
-
-  // Add to mock database
-  users = [...users, newUser];
-  
-  // Save to localStorage
-  localStorage.setItem("user", JSON.stringify(newUser));
-  
-  toast.success("Registration successful");
-  return newUser;
 };
 
 // Login user
@@ -66,18 +86,39 @@ export const loginUser = (phone: string): User | null => {
     return null;
   }
 
-  // Find user
-  const user = users.find((user) => user.phone === phone);
-  if (!user) {
-    toast.error("Phone number not registered");
+  try {
+    // Find user with SQL query
+    const userArray = executeQuery(
+      "SELECT * FROM users WHERE phone = ?", 
+      [phone]
+    );
+    
+    if (userArray.length === 0) {
+      toast.error("Phone number not registered");
+      return null;
+    }
+    
+    const dbUser = userArray[0];
+    
+    // Map database user to application user
+    const user: User = {
+      id: dbUser.id,
+      phone: dbUser.phone,
+      name: dbUser.name,
+      createdAt: dbUser.created_at,
+      balance: dbUser.balance || 0,
+    };
+    
+    // Save to localStorage for session management
+    localStorage.setItem("user", JSON.stringify(user));
+    
+    toast.success("Login successful");
+    return user;
+  } catch (error) {
+    console.error("Login error:", error);
+    toast.error("Login failed");
     return null;
   }
-
-  // Save to localStorage
-  localStorage.setItem("user", JSON.stringify(user));
-  
-  toast.success("Login successful");
-  return user;
 };
 
 // Logout user
@@ -101,27 +142,56 @@ export const getCurrentUser = (): User | null => {
 
 // Update user balance
 export const updateUserBalance = (userId: string, amount: number): User | null => {
-  const userIndex = users.findIndex((user) => user.id === userId);
-  if (userIndex === -1) return null;
-  
-  // Update user balance
-  const updatedUser = { 
-    ...users[userIndex], 
-    balance: users[userIndex].balance + amount 
-  };
-  
-  // Update mock database
-  users = [
-    ...users.slice(0, userIndex),
-    updatedUser,
-    ...users.slice(userIndex + 1)
-  ];
-  
-  // Update localStorage if it's the current user
-  const currentUser = getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+  try {
+    // Get current user first
+    const userArray = executeQuery(
+      "SELECT * FROM users WHERE id = ?",
+      [userId]
+    );
+    
+    if (userArray.length === 0) {
+      return null;
+    }
+    
+    const dbUser = userArray[0];
+    const newBalance = dbUser.balance + amount;
+    
+    // Update user balance with SQL query
+    executeQuery(
+      "UPDATE users SET balance = ? WHERE id = ?",
+      [newBalance, userId]
+    );
+    
+    // Retrieve updated user
+    const updatedUserArray = executeQuery(
+      "SELECT * FROM users WHERE id = ?",
+      [userId]
+    );
+    
+    if (updatedUserArray.length === 0) {
+      return null;
+    }
+    
+    const updatedDbUser = updatedUserArray[0];
+    
+    // Map to application user
+    const updatedUser: User = {
+      id: updatedDbUser.id,
+      phone: updatedDbUser.phone,
+      name: updatedDbUser.name,
+      createdAt: updatedDbUser.created_at,
+      balance: updatedDbUser.balance,
+    };
+    
+    // Update localStorage if it's the current user
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.id === userId) {
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+    
+    return updatedUser;
+  } catch (error) {
+    console.error("Update balance error:", error);
+    return null;
   }
-  
-  return updatedUser;
 };

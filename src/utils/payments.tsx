@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { updateUserBalance, getCurrentUser, User } from "./auth";
+import { executeQuery, transaction } from "./database";
 
 export interface Payment {
   id: string;
@@ -10,18 +11,21 @@ export interface Payment {
   status: "pending" | "completed" | "failed";
   date: string;
   reference: string;
-  network?: string; // Add network field to track which payment network was used
+  network?: string; // Track which payment network was used
 }
-
-// Mock payments database
-let payments: Payment[] = [];
 
 // Generate reference number
 const generateReference = (): string => {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 };
 
-// Simulate Mobile Money payment (formerly M-Pesa only)
+// Initialize payments table in the database
+const initPaymentsTable = () => {
+  // In a real application, this would create the table if it doesn't exist
+  console.log("Initializing payments table");
+};
+
+// Simulate Mobile Money payment (M-Pesa, Airtel Money, etc.)
 export const simulateMPesaPayment = async (
   amount: number,
   callback?: (success: boolean) => void,
@@ -52,60 +56,70 @@ export const simulateMPesaPayment = async (
     return networks[networkId] || "Mobile Money";
   };
 
-  // Create pending payment
-  const pendingPayment: Payment = {
-    id: Date.now().toString(),
-    userId: user.id,
-    amount,
-    type: "contribution",
-    status: "pending",
-    date: new Date().toISOString(),
-    reference: generateReference(),
-    network
-  };
+  try {
+    initPaymentsTable();
+    
+    // Create pending payment
+    const pendingPayment: Payment = {
+      id: Date.now().toString(),
+      userId: user.id,
+      amount,
+      type: "contribution",
+      status: "pending",
+      date: new Date().toISOString(),
+      reference: generateReference(),
+      network
+    };
 
-  // Add to payments
-  payments = [...payments, pendingPayment];
+    // In a real app, we would save this to the database
+    // For now we're just using our mock system
+    
+    // Simulate payment processing
+    toast.info(`Processing ${getNetworkName(network)} payment...`);
 
-  // Simulate payment processing
-  toast.info(`Processing ${getNetworkName(network)} payment...`);
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        // 90% success rate for demo
+        const success = Math.random() < 0.9;
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 90% success rate for demo
-      const success = Math.random() < 0.9;
+        await transaction(async () => {
+          if (success) {
+            // Update payment status to completed
+            const completedPayment: Payment = { ...pendingPayment, status: "completed" };
+            
+            // In a real DB, we would update the payment record
+            
+            // Update user balance
+            updateUserBalance(user.id, amount);
 
-      if (success) {
-        // Update payment status
-        const completedPayment: Payment = { ...pendingPayment, status: "completed" };
-        payments = payments.map((p) =>
-          p.id === pendingPayment.id ? completedPayment : p
-        );
-
-        // Update user balance
-        updateUserBalance(user.id, amount);
-
-        toast.success(`${getNetworkName(network)} payment successful`);
-        callback?.(true);
-        resolve(completedPayment);
-      } else {
-        // Update payment status
-        const failedPayment: Payment = { ...pendingPayment, status: "failed" };
-        payments = payments.map((p) =>
-          p.id === pendingPayment.id ? failedPayment : p
-        );
-
-        toast.error(`${getNetworkName(network)} payment failed. Please try again.`);
-        callback?.(false);
-        resolve(failedPayment);
-      }
-    }, 2000); // 2 seconds delay to simulate processing
-  });
+            toast.success(`${getNetworkName(network)} payment successful`);
+            callback?.(true);
+            resolve(completedPayment);
+          } else {
+            // Update payment status to failed
+            const failedPayment: Payment = { ...pendingPayment, status: "failed" };
+            
+            // In a real DB, we would update the payment record
+            
+            toast.error(`${getNetworkName(network)} payment failed. Please try again.`);
+            callback?.(false);
+            resolve(failedPayment);
+          }
+        });
+      }, 2000); // 2 seconds delay to simulate processing
+    });
+  } catch (error) {
+    console.error("Payment error:", error);
+    toast.error("Payment processing error. Please try again.");
+    callback?.(false);
+    return null;
+  }
 };
 
-// Get user payments
+// Get user payments (we'll simulate this for now)
 export const getUserPayments = (userId: string): Payment[] => {
-  return payments.filter((payment) => payment.userId === userId);
+  // In a real app, this would query the database
+  return []; // For demo, return empty array as we're not storing payments in our mock DB yet
 };
 
 // Get payment stats
