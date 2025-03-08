@@ -19,12 +19,6 @@ const generateReference = (): string => {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 };
 
-// Initialize payments table in the database
-const initPaymentsTable = () => {
-  // In a real application, this would create the table if it doesn't exist
-  console.log("Initializing payments table");
-};
-
 // Simulate Mobile Money payment (M-Pesa, Airtel Money, etc.)
 export const simulateMPesaPayment = async (
   amount: number,
@@ -57,22 +51,25 @@ export const simulateMPesaPayment = async (
   };
 
   try {
-    initPaymentsTable();
-    
-    // Create pending payment
+    // Create pending payment with unique ID
+    const paymentId = Date.now().toString();
+    const reference = generateReference();
     const pendingPayment: Payment = {
-      id: Date.now().toString(),
+      id: paymentId,
       userId: user.id,
       amount,
       type: "contribution",
       status: "pending",
       date: new Date().toISOString(),
-      reference: generateReference(),
+      reference,
       network
     };
 
-    // In a real app, we would save this to the database
-    // For now we're just using our mock system
+    // Save pending payment to database
+    executeQuery(
+      "INSERT INTO transactions (id, user_id, amount, type, status, date, reference, network) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [paymentId, user.id, amount, "contribution", "pending", pendingPayment.date, reference, network]
+    );
     
     // Simulate payment processing
     toast.info(`Processing ${getNetworkName(network)} payment...`);
@@ -85,9 +82,12 @@ export const simulateMPesaPayment = async (
         await transaction(async () => {
           if (success) {
             // Update payment status to completed
-            const completedPayment: Payment = { ...pendingPayment, status: "completed" };
+            executeQuery(
+              "UPDATE transactions SET status = ? WHERE id = ?",
+              ["completed", paymentId]
+            );
             
-            // In a real DB, we would update the payment record
+            const completedPayment: Payment = { ...pendingPayment, status: "completed" };
             
             // Update user balance
             updateUserBalance(user.id, amount);
@@ -97,9 +97,12 @@ export const simulateMPesaPayment = async (
             resolve(completedPayment);
           } else {
             // Update payment status to failed
-            const failedPayment: Payment = { ...pendingPayment, status: "failed" };
+            executeQuery(
+              "UPDATE transactions SET status = ? WHERE id = ?",
+              ["failed", paymentId]
+            );
             
-            // In a real DB, we would update the payment record
+            const failedPayment: Payment = { ...pendingPayment, status: "failed" };
             
             toast.error(`${getNetworkName(network)} payment failed. Please try again.`);
             callback?.(false);
@@ -116,10 +119,23 @@ export const simulateMPesaPayment = async (
   }
 };
 
-// Get user payments (we'll simulate this for now)
+// Get user payments from database
 export const getUserPayments = (userId: string): Payment[] => {
-  // In a real app, this would query the database
-  return []; // For demo, return empty array as we're not storing payments in our mock DB yet
+  const transactions = executeQuery(
+    "SELECT * FROM transactions WHERE user_id = ?",
+    [userId]
+  );
+  
+  return transactions.map((t: any) => ({
+    id: t.id,
+    userId: t.user_id,
+    amount: t.amount,
+    type: t.type,
+    status: t.status,
+    date: t.date,
+    reference: t.reference,
+    network: t.network
+  }));
 };
 
 // Get payment stats
