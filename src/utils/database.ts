@@ -28,62 +28,10 @@ const tables = {
   transactions: [] as DbTransaction[],
 };
 
-// Initialize with demo data
+// Initialize database (no demo data for production)
 const initDatabase = () => {
-  // Only initialize if empty
-  if (tables.users.length === 0) {
-    tables.users.push({
-      id: "1",
-      phone: "255123456789",
-      name: "Demo User",
-      created_at: new Date().toISOString(),
-      balance: 50000,
-    });
-    
-    // Add some sample transactions for demo
-    tables.transactions.push(
-      {
-        id: "t1",
-        user_id: "1",
-        amount: 15000,
-        type: "contribution",
-        status: "completed",
-        date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
-        reference: "REF123456",
-        network: "mpesa"
-      },
-      {
-        id: "t2",
-        user_id: "1",
-        amount: 20000,
-        type: "contribution",
-        status: "completed",
-        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-        reference: "REF789012",
-        network: "airtelmoney"
-      },
-      {
-        id: "t3",
-        user_id: "1",
-        amount: 5000,
-        type: "contribution",
-        status: "failed",
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-        reference: "REF345678",
-        network: "tigopesa"
-      },
-      {
-        id: "t4",
-        user_id: "1",
-        amount: 10000,
-        type: "contribution",
-        status: "completed",
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        reference: "REF901234",
-        network: "mpesa"
-      }
-    );
-  }
+  // Database is initialized empty for production
+  console.log("Database initialized for production (no demo data)");
 };
 
 // Run a SQL-like query (very simplified mock)
@@ -103,14 +51,19 @@ export const executeQuery = (query: string, params: any[] = []): any[] => {
     return tables.users.filter(user => user.phone === phone);
   }
   
+  if (query.toLowerCase().includes('select * from users where id =')) {
+    const id = params[0];
+    return tables.users.filter(user => user.id === id);
+  }
+  
   if (query.toLowerCase().includes('insert into users')) {
-    const [id, phone, name, created_at] = params;
+    const [id, phone, name, created_at, balance] = params;
     const newUser: DbUser = {
       id,
       phone,
       name,
       created_at,
-      balance: 0,
+      balance: balance || 0,
     };
     tables.users.push(newUser);
     return [newUser];
