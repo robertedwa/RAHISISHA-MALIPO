@@ -18,32 +18,35 @@ const Register = ({ setIsAuthenticated }: RegisterProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form fields
+    if (!name.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+
+    if (!phone.trim()) {
+      toast.error("Please enter your phone number");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Validate form fields
-      if (!name.trim()) {
-        toast.error("Please enter your name");
-        setLoading(false);
-        return;
-      }
-
-      if (!phone.trim()) {
-        toast.error("Please enter your phone number");
-        setLoading(false);
-        return;
-      }
-
+      console.log("Attempting to register user:", { name, phone });
       // Attempt to register user
       const user = registerUser(phone, name);
       
       if (user) {
+        console.log("Registration successful, setting authenticated state");
         setIsAuthenticated(true);
         navigate("/dashboard");
+      } else {
+        console.log("Registration failed, user is null");
       }
     } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("Failed to create account. Please try again.");
+      console.error("Unexpected error during registration:", error);
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -113,6 +116,7 @@ const Register = ({ setIsAuthenticated }: RegisterProps) => {
                   value={phone}
                   onChange={setPhone}
                   required
+                  disabled={loading}
                 />
                 <p className="text-xs text-muted-foreground">
                   Format: 255XXXXXXXXX (Tanzanian phone number)

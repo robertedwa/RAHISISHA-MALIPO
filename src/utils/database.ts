@@ -30,13 +30,13 @@ const tables = {
 
 // Initialize database (no demo data for production)
 const initDatabase = () => {
-  // Database is initialized empty for production
-  console.log("Database initialized successfully");
+  console.log("Production database initialized");
+  // No demo data for production environment
 };
 
 // Run a SQL-like query (very simplified mock)
 export const executeQuery = (query: string, params: any[] = []): any[] => {
-  // Initialize database if tables are empty
+  // Make sure database is initialized
   if (tables.users.length === 0) {
     initDatabase();
   }
@@ -138,4 +138,3 @@ export const transaction = async (callback: () => Promise<any>) => {
     throw error;
   }
 };
-
