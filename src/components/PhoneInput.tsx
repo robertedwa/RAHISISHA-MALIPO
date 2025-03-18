@@ -10,6 +10,7 @@ interface PhoneInputProps {
   className?: string;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 const PhoneInput = ({
@@ -18,6 +19,7 @@ const PhoneInput = ({
   className,
   placeholder = "255XXXXXXXXX",
   required = false,
+  disabled = false,
 }: PhoneInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
@@ -39,6 +41,7 @@ const PhoneInput = ({
             ? "border-primary shadow-sm ring-1 ring-primary/30"
             : "border-input",
           !isValid && "border-destructive",
+          disabled && "opacity-50 cursor-not-allowed",
           className
         )}
       >
@@ -56,6 +59,7 @@ const PhoneInput = ({
           }}
           placeholder={placeholder}
           required={required}
+          disabled={disabled}
           className="flex-1 bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           aria-invalid={!isValid}
         />
